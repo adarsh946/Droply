@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   integer,
@@ -31,3 +32,19 @@ export const files = pgTable("files", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// parent : one file/folder can have access to only on parent
+// children : one parent can have access to many file/folder
+
+export const fileRelations = relations(files, ({ one, many }) => ({
+  parent: one(files, {
+    fields: [files.parentId],
+    references: [files.id],
+  }),
+  children: many(files),
+}));
+
+// type definations
+
+export type File = typeof files.$inferSelect;
+export type NewFile = typeof files.$inferInsert;
