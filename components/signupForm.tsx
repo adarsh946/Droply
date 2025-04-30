@@ -9,6 +9,8 @@ import z from "zod";
 
 const SignupForm = () => {
   const [verifying, setIsverifying] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   const { signUp, isLoaded } = useSignUp();
 
   const {
@@ -23,8 +25,28 @@ const SignupForm = () => {
       confirmPassword: "",
     },
   });
-  const onSubmit = async () => {
-    if (isLoaded) return;
+  const onSubmit = async (data: z.infer<typeof createSignupSchema>) => {
+    if (!isLoaded) return;
+
+    setIsSubmitting(true);
+    setAuthError(null);
+
+    try {
+      await signUp.create({
+        emailAddress: data.email,
+        password: data.password,
+      });
+
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      setIsverifying(true);
+    } catch (error: any) {
+      console.error("sign- up error", error);
+      setAuthError(
+        error.errors[0]?.message || "error occured during signup process"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOnSubmit = async () => {};
